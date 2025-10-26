@@ -1,0 +1,26 @@
+{
+  "name": "玉掌智慧羅盤",
+  "short_name": "玉掌羅盤",
+  "description": "基於古典玉掌派智慧的現代手相分析應用",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#059669",
+  "orientation": "portrait",
+  "scope": "/",
+  "lang": "zh-TW",
+  "categories": ["lifestyle", "entertainment"],
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.ico",
+      "sizes": "32x32",
+      "type": "image/x-icon"
+    }
+  ]
+}

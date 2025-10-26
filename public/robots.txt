@@ -1,0 +1,19 @@
+# Robots.txt for 玉掌智慧羅盤 (Jade Palm Wisdom Compass)
+
+User-agent: *
+Allow: /
+
+# API endpoints should not be indexed
+Disallow: /api/
+
+# Health check endpoint
+Disallow: /api/health-check
+
+# Payment endpoints
+Disallow: /api/payment
+
+# Analysis API
+Disallow: /api/analyze
+
+# Sitemap location (if you add one later)
+# Sitemap: https://your-domain.com/sitemap.xml
