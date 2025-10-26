@@ -62,7 +62,8 @@ async function generatePalmAnnotations(imageData: string): Promise<PalmAnnotatio
 
 圖像：${imageData.substring(0, 300)}...`;
 
-    const response = await deepSeekService.callAPI(analysisPrompt);
+    // 使用更簡單的方式調用DeepSeek API
+    const response = await callDeepSeekForAnnotations(analysisPrompt);
     
     // 嘗試解析AI的回應
     const jsonMatch = response.match(/\{[\s\S]*\}/);
@@ -77,6 +78,36 @@ async function generatePalmAnnotations(imageData: string): Promise<PalmAnnotatio
     console.log('AI標註失敗，使用智能預設:', error);
     return generateSmartDefaultAnnotations(imageData);
   }
+}
+
+async function callDeepSeekForAnnotations(prompt: string): Promise<string> {
+  const apiKey = process.env.DEEPSEEK_API_KEY;
+  const apiUrl = process.env.DEEPSEEK_API_URL;
+  
+  if (!apiKey || !apiUrl) {
+    throw new Error('DeepSeek API not configured');
+  }
+  
+  const response = await fetch(apiUrl, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'deepseek-chat',
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.1,
+      max_tokens: 500
+    })
+  });
+  
+  if (!response.ok) {
+    throw new Error(`DeepSeek API error: ${response.status}`);
+  }
+  
+  const data = await response.json();
+  return data.choices[0]?.message?.content || '';
 }
 
 function convertToAnnotationFormat(aiResult: any): PalmAnnotation {
