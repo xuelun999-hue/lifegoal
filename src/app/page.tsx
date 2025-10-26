@@ -11,25 +11,50 @@ export default function Home() {
   const [analysisData, setAnalysisData] = useState<AnalysisData | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
 
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.readAsDataURL(file)
+      reader.onload = () => resolve(reader.result as string)
+      reader.onerror = error => reject(error)
+    })
+  }
+
   const handleImageUpload = async (file: File) => {
     setIsAnalyzing(true)
     
-    // 模擬分析處理時間
-    await new Promise(resolve => setTimeout(resolve, 3000))
-    
-    // 模擬分析結果
-    const mockResult = {
-      handType: '木型手',
-      personality: '創造力豐富，具有藝術天賦，思維活躍',
-      career: '適合從事創意、藝術或教育相關工作',
-      wealth: '財運中等，需要透過努力和智慧累積財富',
-      health: '注意肝膽和神經系統的保養',
-      relationship: '感情豐富，但需要學會表達和溝通',
-      confidence: 85
+    try {
+      // 將檔案轉換為 base64
+      const base64 = await fileToBase64(file)
+      
+      // 調用真實的分析 API
+      const response = await fetch('/api/analyze', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          imageData: base64,
+          userInfo: {
+            gender: 'unknown' // 可以後續添加性別選擇功能
+          }
+        })
+      })
+      
+      if (!response.ok) {
+        throw new Error('分析請求失敗')
+      }
+      
+      const analysisResult = await response.json()
+      setAnalysisData(analysisResult)
+      
+    } catch (error) {
+      console.error('分析失敗:', error)
+      // 如果API失敗，顯示錯誤訊息
+      alert('分析過程中發生錯誤，請稍後再試')
+    } finally {
+      setIsAnalyzing(false)
     }
-    
-    setAnalysisData(mockResult)
-    setIsAnalyzing(false)
   }
 
   return (

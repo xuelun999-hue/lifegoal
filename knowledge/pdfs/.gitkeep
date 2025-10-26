@@ -1,0 +1,10 @@
+# 請將你的PDF知識庫檔案放在這個目錄中
+
+建議的檔案命名：
+- palmistry-basics.pdf
+- hand-types.pdf  
+- palm-lines.pdf
+- special-marks.pdf
+- combination-rules.pdf
+
+上傳後運行：npm run process-knowledge
