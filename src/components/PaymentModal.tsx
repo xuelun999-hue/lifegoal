@@ -26,12 +26,35 @@ export default function PaymentModal({
   const handlePayment = async () => {
     setIsProcessing(true);
     
-    // 模擬付款處理
-    setTimeout(() => {
+    try {
+      const response = await fetch('/api/payment', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          method: paymentMethod,
+          amount: amount,
+          packageName: packageName,
+          userId: 'guest' // TODO: 實際用戶ID
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        onPaymentSuccess();
+        onClose();
+        alert(`付款成功！訂單號：${result.orderId}`);
+      } else {
+        alert(`付款失敗：${result.error}`);
+      }
+    } catch (error) {
+      console.error('Payment error:', error);
+      alert('付款過程中發生錯誤，請稍後再試');
+    } finally {
       setIsProcessing(false);
-      onPaymentSuccess();
-      onClose();
-    }, 2000);
+    }
   };
 
   const handleTestPayment = () => {

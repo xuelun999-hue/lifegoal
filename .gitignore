@@ -36,6 +36,6 @@ yarn-error.log*
 next-env.d.ts
 
 # knowledge base
-knowledge/processed/
 knowledge/embeddings/
 knowledge/pdfs/*.pdf
+# Note: knowledge/processed/ should be included for production deployment
