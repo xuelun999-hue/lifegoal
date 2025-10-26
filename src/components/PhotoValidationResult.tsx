@@ -52,7 +52,7 @@ export default function PhotoValidationResultComponent({
         <div className="mb-6 text-center">
           {result.isValid && showAnnotations ? (
             <div className="space-y-4">
-              <PalmAnnotationCanvas imageUrl={uploadedImage} />
+              <PalmAnnotationCanvas imageUrl={uploadedImage} editable={true} />
               <button
                 onClick={() => setShowAnnotations(false)}
                 className="text-sm text-gray-600 hover:text-gray-800 flex items-center justify-center mx-auto space-x-1"

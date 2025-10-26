@@ -13,12 +13,14 @@ interface PalmAnnotationProps {
   imageUrl: string;
   annotations?: PalmAnnotation;
   onAnnotationsGenerated?: (annotations: PalmAnnotation) => void;
+  editable?: boolean;
 }
 
-export function PalmAnnotationCanvas({ imageUrl, annotations, onAnnotationsGenerated }: PalmAnnotationProps) {
+export function PalmAnnotationCanvas({ imageUrl, annotations, onAnnotationsGenerated, editable = false }: PalmAnnotationProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [palmAnnotations, setPalmAnnotations] = useState<PalmAnnotation | null>(annotations || null);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   // 從API獲取智能標註數據
   const generateAnnotationsFromAPI = async (imageUrl: string): Promise<PalmAnnotation> => {
@@ -200,6 +202,35 @@ export function PalmAnnotationCanvas({ imageUrl, annotations, onAnnotationsGener
     img.src = imageUrl;
   }, [imageUrl, palmAnnotations]);
 
+  const regenerateAnnotations = async () => {
+    if (!canvasRef.current || isGenerating) return;
+    
+    setIsGenerating(true);
+    try {
+      const newAnnotations = await generateAnnotationsFromAPI(imageUrl);
+      setPalmAnnotations(newAnnotations);
+      onAnnotationsGenerated?.(newAnnotations);
+      
+      // 重新繪製
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 0, 0);
+          drawAnnotations(ctx, newAnnotations, img.width, img.height);
+        };
+        img.src = imageUrl;
+      }
+    } catch (error) {
+      console.error('重新生成標註失敗:', error);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   return (
     <div className="relative">
       <canvas
@@ -214,19 +245,33 @@ export function PalmAnnotationCanvas({ imageUrl, annotations, onAnnotationsGener
       )}
       
       {imageLoaded && (
-        <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
-          <div className="flex items-center space-x-2">
-            <div className="w-4 h-4 bg-emerald-500 rounded-full"></div>
-            <span>手指標記</span>
+        <div className="mt-4 space-y-4">
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div className="flex items-center space-x-2">
+              <div className="w-4 h-4 bg-emerald-500 rounded-full"></div>
+              <span>手指標記</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-4 h-1 bg-red-500"></div>
+              <span>生命線</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-4 h-1 bg-blue-500"></div>
+              <span>智慧線</span>
+            </div>
           </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-4 h-1 bg-red-500"></div>
-            <span>生命線</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-4 h-1 bg-blue-500"></div>
-            <span>智慧線</span>
-          </div>
+          
+          {editable && (
+            <div className="flex justify-center">
+              <button
+                onClick={regenerateAnnotations}
+                disabled={isGenerating}
+                className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+              >
+                {isGenerating ? '重新分析中...' : '重新標註特徵'}
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
