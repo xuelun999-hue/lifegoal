@@ -2,8 +2,39 @@ import { NextRequest, NextResponse } from 'next/server';
 import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
 
+interface HealthCheckFile {
+  name: string;
+  size: number;
+  exists: boolean;
+}
+
+interface HealthCheckResponse {
+  timestamp: string;
+  environment: string | undefined;
+  status: string;
+  checks: {
+    api_keys: {
+      deepseek_configured: boolean;
+      deepseek_url_configured: boolean;
+      status: string;
+    };
+    knowledge_base: {
+      status: string;
+      files: HealthCheckFile[];
+      total_size: number;
+    };
+    deployment: {
+      vercel_env: string;
+      vercel_url: string;
+      status: string;
+    };
+  };
+  warnings: string[];
+  errors: string[];
+}
+
 export async function GET(request: NextRequest) {
-  const checks = {
+  const checks: HealthCheckResponse = {
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV,
     status: 'healthy',
