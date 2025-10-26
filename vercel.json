@@ -1,0 +1,12 @@
+{
+  "framework": "nextjs",
+  "regions": ["hkg1"],
+  "env": {
+    "NEXT_PUBLIC_APP_NAME": "玉掌智慧羅盤"
+  },
+  "functions": {
+    "src/app/**": {
+      "maxDuration": 30
+    }
+  }
+}
