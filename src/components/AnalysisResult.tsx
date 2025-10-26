@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import { Star, TrendingUp, Heart, Shield, RotateCcw, Lock, Crown } from 'lucide-react'
 import { AnalysisData } from '@/types'
+import PaymentModal from './PaymentModal'
+import PremiumAnalysisResult from './PremiumAnalysisResult'
 
 interface AnalysisResultProps {
   data: AnalysisData
@@ -11,6 +13,9 @@ interface AnalysisResultProps {
 
 export default function AnalysisResult({ data, onReset }: AnalysisResultProps) {
   const [activeTab, setActiveTab] = useState('overview')
+  const [showPaymentModal, setShowPaymentModal] = useState(false)
+  const [isPremiumUnlocked, setIsPremiumUnlocked] = useState(false)
+  const [currentPackage, setCurrentPackage] = useState({ name: '', amount: 0 })
 
   const tabs = [
     { id: 'overview', label: '總覽', icon: <Star className="w-4 h-4" /> },
@@ -18,6 +23,40 @@ export default function AnalysisResult({ data, onReset }: AnalysisResultProps) {
     { id: 'relationship', label: '感情', icon: <Heart className="w-4 h-4" /> },
     { id: 'health', label: '健康', icon: <Shield className="w-4 h-4" /> },
   ]
+
+  const handlePurchase = (packageName: string, amount: number) => {
+    setCurrentPackage({ name: packageName, amount });
+    setShowPaymentModal(true);
+  };
+
+  const handlePaymentSuccess = () => {
+    setIsPremiumUnlocked(true);
+    alert('付款成功！現在可以查看完整深度分析報告了！');
+  };
+
+  // 如果已解鎖完整版，顯示高級分析結果
+  if (isPremiumUnlocked) {
+    return (
+      <div className="max-w-4xl mx-auto">
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900 font-chinese mb-2">
+              完整深度分析報告
+            </h2>
+            <p className="text-gray-600">基於玉掌派知識庫的專業分析</p>
+          </div>
+          <button
+            onClick={onReset}
+            className="btn-secondary flex items-center space-x-2"
+          >
+            <RotateCcw className="w-4 h-4" />
+            <span>重新分析</span>
+          </button>
+        </div>
+        <PremiumAnalysisResult data={data} isPremium={true} />
+      </div>
+    );
+  }
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -75,7 +114,10 @@ export default function AnalysisResult({ data, onReset }: AnalysisResultProps) {
               <p className="text-amber-700 text-sm">
                 解鎖完整報告查看十年大運、最佳轉職時機、投資建議等詳細內容
               </p>
-              <button className="mt-3 bg-amber-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-amber-700 transition-colors">
+              <button 
+                onClick={() => handlePurchase('深度事業運勢分析', 38)}
+                className="mt-3 bg-amber-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-amber-700 transition-colors"
+              >
                 解鎖完整報告 ¥38
               </button>
             </div>
@@ -102,7 +144,10 @@ export default function AnalysisResult({ data, onReset }: AnalysisResultProps) {
               <p className="text-pink-700 text-sm">
                 上傳伴侶手相，獲得專業的情感相配度分析與相處建議
               </p>
-              <button className="mt-3 bg-pink-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-pink-700 transition-colors">
+              <button 
+                onClick={() => handlePurchase('情感合盤分析', 48)}
+                className="mt-3 bg-pink-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-pink-700 transition-colors"
+              >
                 情感合盤報告 ¥48
               </button>
             </div>
@@ -179,7 +224,10 @@ export default function AnalysisResult({ data, onReset }: AnalysisResultProps) {
             <p className="text-gray-600 text-sm mb-4">
               完整的性格、事業、感情、健康、家庭關係分析
             </p>
-            <button className="btn-primary w-full">
+            <button 
+              onClick={() => handlePurchase('深度生命藍圖', 38)}
+              className="btn-primary w-full"
+            >
               解鎖完整報告 ¥38
             </button>
           </div>
@@ -196,12 +244,24 @@ export default function AnalysisResult({ data, onReset }: AnalysisResultProps) {
             <p className="text-gray-600 text-sm mb-4">
               未來十年運勢預測與人生規劃建議
             </p>
-            <button className="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-lg transition-colors w-full">
+            <button 
+              onClick={() => handlePurchase('十年大運趨勢', 128)}
+              className="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-lg transition-colors w-full"
+            >
               年度訂閱 ¥128
             </button>
           </div>
         </div>
       </div>
+      
+      {/* 付款模態框 */}
+      <PaymentModal
+        isOpen={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+        onPaymentSuccess={handlePaymentSuccess}
+        amount={currentPackage.amount}
+        packageName={currentPackage.name}
+      />
     </div>
   )
 }
