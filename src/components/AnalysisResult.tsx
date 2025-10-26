@@ -2,16 +2,7 @@
 
 import { useState } from 'react'
 import { Star, TrendingUp, Heart, Shield, RotateCcw, Lock, Crown } from 'lucide-react'
-
-interface AnalysisData {
-  handType: string
-  personality: string
-  career: string
-  wealth: string
-  health: string
-  relationship: string
-  confidence: number
-}
+import { AnalysisData } from '@/types'
 
 interface AnalysisResultProps {
   data: AnalysisData

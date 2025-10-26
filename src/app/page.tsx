@@ -5,9 +5,10 @@ import Header from '@/components/Header'
 import UploadSection from '@/components/UploadSection'
 import AnalysisResult from '@/components/AnalysisResult'
 import IntroSection from '@/components/IntroSection'
+import { AnalysisData } from '@/types'
 
 export default function Home() {
-  const [analysisData, setAnalysisData] = useState(null)
+  const [analysisData, setAnalysisData] = useState<AnalysisData | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
 
   const handleImageUpload = async (file: File) => {

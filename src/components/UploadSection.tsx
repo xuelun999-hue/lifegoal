@@ -61,6 +61,7 @@ export default function UploadSection({ onImageUpload, isAnalyzing }: UploadSect
         <div className="card text-center">
           {uploadedImage && (
             <div className="mb-6">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img 
                 src={uploadedImage} 
                 alt="已上傳的手掌照片" 
