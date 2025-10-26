@@ -50,15 +50,27 @@ npm start
 3. 免費基礎報告
 4. 付費解鎖完整功能
 
-## 🔧 環境變量
+## 🔧 環境變量配置
 
-創建 `.env.local` 文件：
-
-```env
-# 未來AI服務配置
-NEXT_PUBLIC_API_URL=your_api_url
-OPENAI_API_KEY=your_openai_key
+### 1. 複製環境變量示例文件
+```bash
+cp .env.example .env.local
 ```
+
+### 2. 配置 DeepSeek API 密鑰
+訪問 [DeepSeek Platform](https://platform.deepseek.com/) 註冊並獲取 API 密鑰
+
+在 `.env.local` 文件中設置：
+```env
+DEEPSEEK_API_KEY=your_actual_deepseek_api_key
+DEEPSEEK_API_URL=https://api.deepseek.com/v1/chat/completions
+NEXT_PUBLIC_APP_NAME=玉掌智慧羅盤
+```
+
+### 3. 安全注意事項
+- ⚠️ **切勿**將真實 API 密鑰提交到 Git 倉庫
+- 🔒 `.env.local` 文件已在 `.gitignore` 中排除
+- 🔑 僅在本地開發和部署環境中設置真實密鑰
 
 ## 📱 MVP功能
 

@@ -2,23 +2,35 @@
 
 ## 🚀 Vercel 自動部署
 
-### 步驟 1: 上傳到 GitHub
+### 步驟 1: 準備環境變量
+
+在部署前，確保你已經：
+1. 註冊 [DeepSeek Platform](https://platform.deepseek.com/) 帳號
+2. 獲取 DeepSeek API 密鑰
+3. 記錄密鑰用於 Vercel 配置
+
+### 步驟 2: 上傳到 GitHub
 
 ```bash
-# 如果尚未設置遠程倉庫
-git remote add origin https://github.com/你的用戶名/jade-palm-compass.git
-git branch -M main
-git push -u origin main
+# 確保代碼已推送到 GitHub
+git add .
+git commit -m "Ready for deployment"
+git push origin main
 ```
 
-### 步驟 2: Vercel 部署
+### 步驟 3: Vercel 部署配置
 
 1. 訪問 [vercel.com](https://vercel.com)
 2. 使用 GitHub 帳號登入
 3. 點擊 "New Project"
-4. 選擇 `jade-palm-compass` 倉庫
-5. 保持默認設置，點擊 "Deploy"
-6. 等待部署完成（約 2-3 分鐘）
+4. 選擇 `lifegoal` 倉庫
+5. **重要：設置環境變量**
+   - 在 "Environment Variables" 部分添加：
+   - `DEEPSEEK_API_KEY` = 你的實際 DeepSeek API 密鑰
+   - `DEEPSEEK_API_URL` = `https://api.deepseek.com/v1/chat/completions`
+   - `NEXT_PUBLIC_APP_NAME` = `玉掌智慧羅盤`
+6. 點擊 "Deploy"
+7. 等待部署完成（約 3-5 分鐘）
 
 ### 步驟 3: 自定義域名（可選）
 
