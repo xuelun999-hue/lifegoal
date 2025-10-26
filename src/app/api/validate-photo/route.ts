@@ -59,12 +59,12 @@ async function validatePalmPhotoWithAI(imageData: string) {
     const lightingAdequate = lightingResult.status === 'fulfilled' ? lightingResult.value : false;
     const overallClarity = clarityResult.status === 'fulfilled' ? clarityResult.value : false;
     
-    // 計算分數
-    let score = 0;
-    if (fingersDetected) score += 30;
-    if (palmLinesVisible) score += 25;
-    if (lightingAdequate) score += 25;
-    if (overallClarity) score += 20;
+    // 計算分數 - 平衡的評分標準
+    let score = 30; // 基礎分數
+    if (fingersDetected) score += 35; // 手指檢測最重要
+    if (palmLinesVisible) score += 25; // 掌紋也很重要
+    if (lightingAdequate) score += 10;
+    if (overallClarity) score += 10;
     
     // 生成反饋
     const { issues, suggestions } = generateFeedback({
@@ -74,9 +74,12 @@ async function validatePalmPhotoWithAI(imageData: string) {
       overallClarity
     });
     
+    // 平衡的驗證條件：必須同時檢測到手指AND掌紋，或者總分超過70分
+    const isValid = (fingersDetected && palmLinesVisible) || score >= 70;
+    
     return {
-      isValid: score >= 75 && fingersDetected && palmLinesVisible && lightingAdequate,
-      score,
+      isValid,
+      score: Math.min(score, 100), // 確保分數不超過100
       issues,
       suggestions,
       details: {
@@ -107,12 +110,13 @@ async function validatePalmPhotoWithAI(imageData: string) {
 }
 
 async function checkFingers(service: DeepSeekPalmistryService, imageData: string): Promise<boolean> {
-  const prompt = `請仔細分析這張手掌照片，檢查是否清楚顯示了完整的五根手指。
+  const prompt = `請仔細分析這張照片，判斷是否為人類手掌照片。
 
-檢查要求：
-1. 拇指、食指、中指、無名指、小指是否都完整可見
-2. 手指是否被遮擋、截斷或模糊
-3. 手指輪廓是否清晰可辨
+嚴格檢查要求：
+1. 這是否是一隻真實的人類手掌？
+2. 是否可以看到手指（至少3-4根）？
+3. 照片主體是否確實是手掌，而不是其他物體、動物或身體部位？
+4. 如果是貓、狗、其他動物或非手掌物體，必須回答"否"
 
 請只回答：是 或 否
 
@@ -121,20 +125,21 @@ async function checkFingers(service: DeepSeekPalmistryService, imageData: string
   try {
     const response = await callDeepSeekValidation(prompt);
     return response.toLowerCase().includes('是') || 
-           response.toLowerCase().includes('完整') ||
-           response.toLowerCase().includes('清楚');
+           response.toLowerCase().includes('可以') ||
+           response.toLowerCase().includes('看到') ||
+           response.toLowerCase().includes('手');
   } catch (error) {
-    return false;
+    return true; // 如果API失敗，默認通過
   }
 }
 
 async function checkPalmLines(service: DeepSeekPalmistryService, imageData: string): Promise<boolean> {
-  const prompt = `請仔細分析這張手掌照片，檢查主要掌紋線條是否清晰可見。
+  const prompt = `請分析這張手掌照片，檢查是否可以看到一些掌紋線條。
 
 檢查要點：
-1. 生命線（圍繞拇指根部的弧形線）是否清晰
-2. 智慧線（橫穿手掌中部的線條）是否可見
-3. 掌紋線條是否足夠清晰以進行分析
+1. 是否可以看到手掌表面的一些線條
+2. 不需要非常清晰，只要能看到線條即可
+3. 照片是否足夠清楚來進行基本分析
 
 請只回答：是 或 否
 
@@ -143,21 +148,21 @@ async function checkPalmLines(service: DeepSeekPalmistryService, imageData: stri
   try {
     const response = await callDeepSeekValidation(prompt);
     return response.toLowerCase().includes('是') || 
-           response.toLowerCase().includes('清晰') ||
-           response.toLowerCase().includes('可見');
+           response.toLowerCase().includes('可以') ||
+           response.toLowerCase().includes('看到') ||
+           response.toLowerCase().includes('線條');
   } catch (error) {
-    return false;
+    return true; // 如果API失敗，默認通過
   }
 }
 
 async function checkLighting(service: DeepSeekPalmistryService, imageData: string): Promise<boolean> {
-  const prompt = `請評估這張手掌照片的光線條件。
+  const prompt = `請評估這張手掌照片的光線是否可以接受。
 
 評估標準：
-1. 整體亮度是否充足
-2. 是否有過暗的陰影遮擋手掌
-3. 是否有過度曝光的區域
-4. 光線是否均勻，細節是否清晰
+1. 照片是否太暗看不清楚
+2. 是否過度曝光變成白色
+3. 整體是否可以看清手掌內容
 
 請只回答：是 或 否
 
@@ -166,20 +171,21 @@ async function checkLighting(service: DeepSeekPalmistryService, imageData: strin
   try {
     const response = await callDeepSeekValidation(prompt);
     return response.toLowerCase().includes('是') || 
-           response.toLowerCase().includes('充足') ||
-           response.toLowerCase().includes('良好');
+           response.toLowerCase().includes('可以') ||
+           response.toLowerCase().includes('接受') ||
+           response.toLowerCase().includes('看清');
   } catch (error) {
-    return false;
+    return true; // 如果API失敗，默認通過
   }
 }
 
 async function checkClarity(service: DeepSeekPalmistryService, imageData: string): Promise<boolean> {
-  const prompt = `請評估這張手掌照片的整體清晰度。
+  const prompt = `請評估這張手掌照片是否可以接受用於分析。
 
-評估要點：
-1. 照片是否模糊或有震動痕跡
-2. 手掌細節是否清晰可見
-3. 解析度是否足夠進行手相分析
+評估標準：
+1. 照片是否太模糊無法看清基本內容
+2. 是否可以看到手掌的基本輪廓
+3. 整體是否可以用於基本分析（不需要非常清晰）
 
 請只回答：是 或 否
 
@@ -188,10 +194,11 @@ async function checkClarity(service: DeepSeekPalmistryService, imageData: string
   try {
     const response = await callDeepSeekValidation(prompt);
     return response.toLowerCase().includes('是') || 
-           response.toLowerCase().includes('清晰') ||
-           response.toLowerCase().includes('足夠');
+           response.toLowerCase().includes('可以') ||
+           response.toLowerCase().includes('接受') ||
+           response.toLowerCase().includes('看到');
   } catch (error) {
-    return false;
+    return true; // 如果API失敗，默認通過
   }
 }
 

@@ -1,7 +1,9 @@
 'use client'
 
-import { AlertTriangle, CheckCircle, X, RotateCcw } from 'lucide-react'
+import { AlertTriangle, CheckCircle, X, RotateCcw, Eye } from 'lucide-react'
 import { PhotoValidationResult } from '@/lib/photo-validator'
+import { PalmAnnotationCanvas } from './PalmAnnotation'
+import { useState } from 'react'
 
 interface PhotoValidationResultProps {
   result: PhotoValidationResult;
@@ -16,6 +18,7 @@ export default function PhotoValidationResultComponent({
   onProceed,
   uploadedImage 
 }: PhotoValidationResultProps) {
+  const [showAnnotations, setShowAnnotations] = useState(false)
   
   const getScoreColor = (score: number) => {
     if (score >= 75) return 'text-green-600';
@@ -45,14 +48,38 @@ export default function PhotoValidationResultComponent({
   return (
     <div className="max-w-2xl mx-auto">
       <div className="card">
-        {/* 照片預覽 */}
+        {/* 照片預覽和標註 */}
         <div className="mb-6 text-center">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img 
-            src={uploadedImage} 
-            alt="上傳的手掌照片" 
-            className="w-64 h-64 object-cover rounded-lg mx-auto border-2 border-gray-200"
-          />
+          {result.isValid && showAnnotations ? (
+            <div className="space-y-4">
+              <PalmAnnotationCanvas imageUrl={uploadedImage} />
+              <button
+                onClick={() => setShowAnnotations(false)}
+                className="text-sm text-gray-600 hover:text-gray-800 flex items-center justify-center mx-auto space-x-1"
+              >
+                <Eye className="w-4 h-4" />
+                <span>顯示原圖</span>
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img 
+                src={uploadedImage} 
+                alt="上傳的手掌照片" 
+                className="w-64 h-64 object-cover rounded-lg mx-auto border-2 border-gray-200"
+              />
+              {result.isValid && (
+                <button
+                  onClick={() => setShowAnnotations(true)}
+                  className="text-sm text-emerald-600 hover:text-emerald-800 flex items-center justify-center mx-auto space-x-1"
+                >
+                  <Eye className="w-4 h-4" />
+                  <span>顯示手掌特徵標註</span>
+                </button>
+              )}
+            </div>
+          )}
         </div>
 
         {/* 驗證結果標題 */}
