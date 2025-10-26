@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
+import { DeepSeekPalmistryService } from '@/lib/deepseek-service';
+import { EnhancedPalmAnalyzer } from '@/lib/enhanced-analyzer';
 
 interface AnalysisRequest {
   imageData: string;
@@ -10,153 +10,103 @@ interface AnalysisRequest {
   };
 }
 
-// 載入知識庫內容
-function loadKnowledgeBase(): string {
-  try {
-    const processedDir = path.join(process.cwd(), 'knowledge', 'processed');
-    
-    if (!fs.existsSync(processedDir)) {
-      return getDefaultKnowledge();
-    }
+// 創建全局服務實例
+let deepSeekService: DeepSeekPalmistryService | null = null;
+let fallbackAnalyzer: EnhancedPalmAnalyzer | null = null;
 
-    const files = fs.readdirSync(processedDir)
-      .filter(file => file.endsWith('.md'));
-
-    if (files.length === 0) {
-      return getDefaultKnowledge();
-    }
-
-    let combinedKnowledge = '# 玉掌派手相學知識庫\n\n';
-
-    for (const file of files) {
-      const filePath = path.join(processedDir, file);
-      const content = fs.readFileSync(filePath, 'utf8');
-      combinedKnowledge += content + '\n\n';
-    }
-
-    return combinedKnowledge;
-  } catch (error) {
-    console.error('載入知識庫時發生錯誤:', error);
-    return getDefaultKnowledge();
-  }
-}
-
-function getDefaultKnowledge(): string {
-  return `
-# 玉掌派手相學基礎知識
-
-## 手型分類
-### 木型手
-- 特徵：手掌長方形，手指修長纖細
-- 性格：創造力強，藝術天賦，思維活躍
-- 事業：適合藝術、設計、教育、文學創作
-
-### 火型手  
-- 特徵：手掌呈梯形，手指較短但有力
-- 性格：行動力強，熱情積極，具領導能力
-- 事業：適合管理、銷售、創業、體育
-
-### 土型手
-- 特徵：手掌方形厚實，手指粗壯
-- 性格：務實穩重，踏實可靠，執行力強
-- 事業：適合建築、農業、製造業、金融
-
-### 金型手
-- 特徵：手掌方形，手指長度適中
-- 性格：理性冷靜，邏輯思維強，注重細節
-- 事業：適合科技、法律、會計、醫療
-
-### 水型手
-- 特徵：手掌橢圓形，手指柔軟靈活
-- 性格：感性直覺，適應力強，善於溝通
-- 事業：適合媒體、服務業、心理諮詢
-
-## 主要掌紋線條
-### 生命線（地紋）
-- 位置：圍繞拇指根部
-- 意義：健康狀況、生命力、重大變化
-
-### 智慧線（人紋）
-- 位置：橫向穿過手掌中部
-- 意義：思維方式、智力水平、決策能力
-
-### 感情線（天紋）
-- 位置：手掌上方橫線
-- 意義：情感表達、人際關係、愛情運勢
-`;
-}
-
-// 基於知識庫進行分析的模擬函數
-function analyzeWithKnowledge(knowledgeBase: string, userInfo: any) {
-  // 模擬基於知識庫的分析
-  // 在實際應用中，這裡會調用 DeepSeek API
-  
-  const handTypes = ['木型手', '火型手', '土型手', '金型手', '水型手'];
-  const randomHandType = handTypes[Math.floor(Math.random() * handTypes.length)];
-  
-  // 根據手型從知識庫中提取相關信息
-  const handTypeInfo = extractHandTypeInfo(knowledgeBase, randomHandType);
-  
-  return {
-    handType: randomHandType,
-    personality: handTypeInfo.personality || '創造力豐富，具有藝術天賦，思維活躍',
-    career: handTypeInfo.career || '適合從事創意、藝術或教育相關工作',
-    wealth: '財運中等，需要透過努力和智慧累積財富，建議在創意領域發展',
-    health: '注意肝膽和神經系統的保養，保持規律作息',
-    relationship: '感情豐富，但需要學會表達和溝通，適合與有共同興趣的伴侶',
-    confidence: Math.floor(Math.random() * 20) + 80 // 80-99%
-  };
-}
-
-function extractHandTypeInfo(knowledgeBase: string, handType: string) {
-  const lines = knowledgeBase.split('\n');
-  let personality = '';
-  let career = '';
-  
-  // 找到手型相關的行
-  let foundHandType = false;
-  for (const line of lines) {
-    if (line.includes(handType)) {
-      foundHandType = true;
-      continue;
-    }
-    
-    if (foundHandType) {
-      if (line.includes('性格') || line.includes('**性格**')) {
-        personality = line.replace(/.*性格[*:：]*/, '').replace(/[*-]/, '').trim();
-      }
-      if (line.includes('事業') || line.includes('**事業**')) {
-        career = line.replace(/.*事業[*:：]*/, '').replace(/[*-]/, '').trim();
-      }
-      
-      // 如果遇到下一個手型，停止搜尋
-      if (line.includes('###') && line.includes('手')) {
-        break;
-      }
+function getDeepSeekService(): DeepSeekPalmistryService {
+  if (!deepSeekService) {
+    try {
+      deepSeekService = new DeepSeekPalmistryService();
+    } catch (error) {
+      console.error('DeepSeek服務初始化失敗:', error);
+      return null;
     }
   }
-  
-  return { personality, career };
+  return deepSeekService;
+}
+
+function getFallbackAnalyzer(): EnhancedPalmAnalyzer {
+  if (!fallbackAnalyzer) {
+    fallbackAnalyzer = new EnhancedPalmAnalyzer();
+  }
+  return fallbackAnalyzer;
 }
 
 export async function POST(request: NextRequest) {
+  const startTime = Date.now();
+  
   try {
     const { imageData, userInfo }: AnalysisRequest = await request.json();
     
-    // 載入知識庫
-    const knowledgeBase = loadKnowledgeBase();
+    console.log('🔍 開始手相分析...');
     
-    // 模擬分析過程（實際應用中會調用 DeepSeek API）
+    // 嘗試使用DeepSeek服務
+    const deepSeekService = getDeepSeekService();
+    
+    if (deepSeekService) {
+      console.log('🤖 使用DeepSeek AI進行分析');
+      
+      try {
+        const analysis = await deepSeekService.analyzePalm(imageData, userInfo);
+        const processingTime = Date.now() - startTime;
+        
+        console.log(`✅ DeepSeek分析完成，耗時: ${processingTime}ms`);
+        
+        return NextResponse.json({
+          ...analysis,
+          processingTime,
+          _debug: {
+            method: 'deepseek_ai',
+            timestamp: new Date().toISOString()
+          }
+        });
+        
+      } catch (apiError) {
+        console.error('DeepSeek API調用失敗:', apiError);
+        // 繼續使用本地分析作為備用
+      }
+    }
+    
+    // 如果DeepSeek失敗，使用本地分析器
+    console.log('🔄 使用本地知識庫分析');
+    const analyzer = getFallbackAnalyzer();
+    
+    // 模擬分析時間
     await new Promise(resolve => setTimeout(resolve, 1000));
     
-    // 基於知識庫進行分析
-    const analysis = analyzeWithKnowledge(knowledgeBase, userInfo);
+    const analysis = analyzer.analyzeBasedOnKnowledge(userInfo);
+    const processingTime = Date.now() - startTime;
     
-    return NextResponse.json(analysis);
+    const stats = analyzer.getKnowledgeStats();
+    console.log(`📊 本地分析完成，知識庫: ${stats.knowledgeLength} 字符`);
+    
+    return NextResponse.json({
+      ...analysis,
+      processingTime,
+      analysisMethod: 'local_knowledge',
+      note: deepSeekService ? 'AI服務暫時不可用，使用本地知識庫分析' : 'DeepSeek服務未配置，使用本地分析',
+      _debug: {
+        method: 'local_fallback',
+        knowledgeLoaded: stats.isLoaded,
+        knowledgeSize: stats.knowledgeLength,
+        timestamp: new Date().toISOString()
+      }
+    });
+
   } catch (error) {
+    const processingTime = Date.now() - startTime;
     console.error('分析過程中發生錯誤:', error);
+    
     return NextResponse.json(
-      { error: '分析過程中發生錯誤，請稍後再試' },
+      { 
+        error: '分析過程中發生錯誤，請稍後再試',
+        processingTime,
+        _debug: {
+          method: 'error',
+          timestamp: new Date().toISOString()
+        }
+      },
       { status: 500 }
     );
   }
