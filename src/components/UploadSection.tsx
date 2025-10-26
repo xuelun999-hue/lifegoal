@@ -6,9 +6,10 @@ import { Upload, Camera, Loader2, CheckCircle } from 'lucide-react'
 interface UploadSectionProps {
   onImageUpload: (file: File) => void
   isAnalyzing: boolean
+  disabled?: boolean
 }
 
-export default function UploadSection({ onImageUpload, isAnalyzing }: UploadSectionProps) {
+export default function UploadSection({ onImageUpload, isAnalyzing, disabled = false }: UploadSectionProps) {
   const [dragActive, setDragActive] = useState(false)
   const [uploadedImage, setUploadedImage] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -28,6 +29,8 @@ export default function UploadSection({ onImageUpload, isAnalyzing }: UploadSect
     e.stopPropagation()
     setDragActive(false)
     
+    if (disabled || isAnalyzing) return
+    
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       handleFiles(e.dataTransfer.files[0])
     }
@@ -35,6 +38,8 @@ export default function UploadSection({ onImageUpload, isAnalyzing }: UploadSect
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.preventDefault()
+    if (disabled || isAnalyzing) return
+    
     if (e.target.files && e.target.files[0]) {
       handleFiles(e.target.files[0])
     }
@@ -52,6 +57,7 @@ export default function UploadSection({ onImageUpload, isAnalyzing }: UploadSect
   }
 
   const onButtonClick = () => {
+    if (disabled || isAnalyzing) return
     fileInputRef.current?.click()
   }
 
@@ -93,7 +99,10 @@ export default function UploadSection({ onImageUpload, isAnalyzing }: UploadSect
           </div>
           
           <p className="mt-4 text-gray-500">
-            請稍候，我們正在運用玉掌派的古老智慧為您解讀...
+            {isAnalyzing 
+              ? '請稍候，我們正在運用玉掌派的古老智慧為您解讀...'
+              : '正在驗證照片質量，請稍候...'
+            }
           </p>
         </div>
       </div>
@@ -105,9 +114,11 @@ export default function UploadSection({ onImageUpload, isAnalyzing }: UploadSect
       <div className="card">
         <div
           className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-colors ${
-            dragActive 
-              ? 'border-jade-400 bg-jade-50' 
-              : 'border-gray-300 hover:border-jade-300'
+            disabled 
+              ? 'border-gray-200 bg-gray-50 cursor-not-allowed'
+              : dragActive 
+                ? 'border-jade-400 bg-jade-50' 
+                : 'border-gray-300 hover:border-jade-300'
           }`}
           onDragEnter={handleDrag}
           onDragLeave={handleDrag}
@@ -141,14 +152,19 @@ export default function UploadSection({ onImageUpload, isAnalyzing }: UploadSect
             <div className="space-y-3">
               <button
                 onClick={onButtonClick}
-                className="btn-primary w-full flex items-center justify-center space-x-2"
+                disabled={disabled}
+                className={`w-full flex items-center justify-center space-x-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                  disabled
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    : 'btn-primary'
+                }`}
               >
                 <Camera className="w-5 h-5" />
-                <span>選擇照片</span>
+                <span>{disabled ? '請先填寫個人資料' : '選擇照片'}</span>
               </button>
               
               <p className="text-sm text-gray-500">
-                或將照片拖放到此區域
+                {disabled ? '完成個人資料後即可上傳照片' : '或將照片拖放到此區域'}
               </p>
             </div>
           </div>
