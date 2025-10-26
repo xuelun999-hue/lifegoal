@@ -2,13 +2,12 @@
 
 import { useState } from 'react'
 import Header from '@/components/Header'
+import Footer from '@/components/Footer'
 import UploadSection from '@/components/UploadSection'
 import AnalysisResult from '@/components/AnalysisResult'
 import IntroSection from '@/components/IntroSection'
 import UserInfoForm from '@/components/UserInfoForm'
-import PhotoValidationResult from '@/components/PhotoValidationResult'
 import { AnalysisData } from '@/types'
-import { PhotoValidator, PhotoValidationResult as ValidationResult } from '@/lib/photo-validator'
 
 interface UserInfo {
   gender: 'male' | 'female' | 'other' | null;
@@ -20,11 +19,6 @@ export default function Home() {
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [userInfo, setUserInfo] = useState<UserInfo>({ gender: null, birthYear: null })
   const [uploadedImage, setUploadedImage] = useState<string | null>(null)
-  const [validationResult, setValidationResult] = useState<ValidationResult | null>(null)
-  const [isValidating, setIsValidating] = useState(false)
-  
-  // 照片验证器实例
-  const photoValidator = new PhotoValidator()
 
   const fileToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -37,33 +31,24 @@ export default function Home() {
 
   const handleImageUpload = async (file: File) => {
     try {
-      setIsValidating(true)
-      setValidationResult(null)
+      setIsAnalyzing(true)
       setAnalysisData(null)
       
       // 將檔案轉換為 base64
       const base64 = await fileToBase64(file)
       setUploadedImage(base64)
       
-      // 驗證照片質量
-      const validation = await photoValidator.validatePalmPhoto(base64)
-      setValidationResult(validation)
+      // 直接進行分析，跳過驗證步驟
+      await performAnalysis(base64)
       
     } catch (error) {
       console.error('照片處理失敗:', error)
       alert('照片處理失敗，請重新上傳')
-    } finally {
-      setIsValidating(false)
+      setIsAnalyzing(false)
     }
   }
 
-  const handleProceedWithAnalysis = async () => {
-    if (!uploadedImage || !validationResult?.isValid) {
-      return
-    }
-    
-    setIsAnalyzing(true)
-    
+  const performAnalysis = async (imageData: string) => {
     try {
       // 調用真實的分析 API
       const response = await fetch('/api/analyze', {
@@ -72,7 +57,7 @@ export default function Home() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          imageData: uploadedImage,
+          imageData: imageData,
           userInfo: {
             gender: userInfo.gender || 'unknown',
             birthYear: userInfo.birthYear,
@@ -96,15 +81,8 @@ export default function Home() {
     }
   }
 
-  const handleRetryUpload = () => {
-    setUploadedImage(null)
-    setValidationResult(null)
-    setAnalysisData(null)
-  }
-
   const handleReset = () => {
     setUploadedImage(null)
-    setValidationResult(null)
     setAnalysisData(null)
     setUserInfo({ gender: null, birthYear: null })
   }
@@ -121,18 +99,6 @@ export default function Home() {
       )
     }
     
-    // 显示照片验证结果
-    if (validationResult && uploadedImage) {
-      return (
-        <PhotoValidationResult
-          result={validationResult}
-          onRetry={handleRetryUpload}
-          onProceed={handleProceedWithAnalysis}
-          uploadedImage={uploadedImage}
-        />
-      )
-    }
-    
     // 显示上传界面
     return (
       <>
@@ -143,7 +109,7 @@ export default function Home() {
         />
         <UploadSection 
           onImageUpload={handleImageUpload}
-          isAnalyzing={isValidating || isAnalyzing}
+          isAnalyzing={isAnalyzing}
           disabled={!userInfo.gender || !userInfo.birthYear}
         />
       </>
@@ -151,11 +117,12 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen flex flex-col">
       <Header />
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8 flex-1">
         {renderContent()}
       </main>
+      <Footer />
     </div>
   )
 }
