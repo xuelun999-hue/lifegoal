@@ -111,7 +111,9 @@ export class EnhancedPalmAnalyzer {
         }
 
         // 提取各类信息
-        for (const [key, keywords] of this.analysisKeywords.entries()) {
+        const keywordKeys = Array.from(this.analysisKeywords.keys());
+        for (const key of keywordKeys) {
+          const keywords = this.analysisKeywords.get(key) || [];
           for (const keyword of keywords) {
             if (line.includes(keyword) && line.length > 10) {
               const cleanLine = line
@@ -132,7 +134,7 @@ export class EnhancedPalmAnalyzer {
   }
 
   private getDefaultPersonality(handType: string): string {
-    const personalities = {
+    const personalities: Record<string, string> = {
       '木型手': '創造力豐富，具有藝術天賦，思維活躍，感情細膩，追求完美',
       '火型手': '行動力強，熱情積極，具有領導能力，決策果斷，富有激情',
       '土型手': '務實穩重，踏實可靠，執行力強，注重安全，有耐心',
@@ -143,7 +145,7 @@ export class EnhancedPalmAnalyzer {
   }
 
   private getDefaultCareer(handType: string): string {
-    const careers = {
+    const careers: Record<string, string> = {
       '木型手': '適合從事藝術、設計、教育、文學創作、音樂等創意性工作',
       '火型手': '適合從事管理、銷售、創業、體育、軍警等需要行動力的工作',
       '土型手': '適合從事建築、農業、製造業、金融、會計等穩定性工作',
@@ -154,7 +156,7 @@ export class EnhancedPalmAnalyzer {
   }
 
   private getDefaultWealth(handType: string): string {
-    const wealth = {
+    const wealth: Record<string, string> = {
       '木型手': '財運需要通過創意和才華積累，晚年運勢較好，投資需謹慎',
       '火型手': '財運旺盛，善於把握機會，但需要注意衝動性投資的風險',
       '土型手': '財運穩定，善於理財和儲蓄，適合長期穩健的投資方式',
@@ -165,7 +167,7 @@ export class EnhancedPalmAnalyzer {
   }
 
   private getDefaultHealth(handType: string): string {
-    const health = {
+    const health: Record<string, string> = {
       '木型手': '注意肝膽和神經系統的保養，避免過度勞累，保持規律作息',
       '火型手': '注意心血管和消化系統，控制情緒，避免過度激動',
       '土型手': '注意脾胃和關節保養，控制飲食，適量運動',
@@ -176,7 +178,7 @@ export class EnhancedPalmAnalyzer {
   }
 
   private getDefaultRelationship(handType: string): string {
-    const relationships = {
+    const relationships: Record<string, string> = {
       '木型手': '感情豐富細膩，需要心靈相通的伴侶，重視精神層面的交流',
       '火型手': '感情熱烈直接，喜歡主動追求，需要能欣賞其魅力的伴侶',
       '土型手': '感情穩定專一，重視家庭責任，適合踏實可靠的伴侶',

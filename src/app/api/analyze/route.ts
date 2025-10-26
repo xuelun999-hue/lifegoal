@@ -14,7 +14,7 @@ interface AnalysisRequest {
 let deepSeekService: DeepSeekPalmistryService | null = null;
 let fallbackAnalyzer: EnhancedPalmAnalyzer | null = null;
 
-function getDeepSeekService(): DeepSeekPalmistryService {
+function getDeepSeekService(): DeepSeekPalmistryService | null {
   if (!deepSeekService) {
     try {
       deepSeekService = new DeepSeekPalmistryService();
