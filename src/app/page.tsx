@@ -14,10 +14,10 @@ export default function Home() {
   const handleImageUpload = async (file: File) => {
     setIsAnalyzing(true)
     
-    // Mock AI analysis delay
+    // 模擬分析處理時間
     await new Promise(resolve => setTimeout(resolve, 3000))
     
-    // Mock analysis result
+    // 模擬分析結果
     const mockResult = {
       handType: '木型手',
       personality: '創造力豐富，具有藝術天賦，思維活躍',

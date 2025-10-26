@@ -11,8 +11,8 @@ export default function IntroSection() {
     },
     {
       icon: <Zap className="w-6 h-6 text-jade-600" />,
-      title: 'AI 智能分析',
-      description: '現代科技結合古老智慧'
+      title: '精準分析',
+      description: '系統化解讀掌紋奧秘'
     },
     {
       icon: <Shield className="w-6 h-6 text-jade-600" />,
@@ -33,7 +33,7 @@ export default function IntroSection() {
           探索您的生命密碼
         </h2>
         <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-          透過古典玉掌派的智慧與現代AI技術，深度解讀您的掌紋奧秘
+          透過古典玉掌派的智慧與現代技術，深度解讀您的掌紋奧秘
           <br />
           了解性格特質、事業方向、感情運勢與人生規劃
         </p>
