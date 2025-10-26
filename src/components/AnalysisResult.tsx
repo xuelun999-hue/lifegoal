@@ -106,21 +106,6 @@ export default function AnalysisResult({ data, onReset }: AnalysisResultProps) {
               </p>
             </div>
             
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-              <div className="flex items-center mb-2">
-                <Lock className="w-4 h-4 text-amber-600 mr-2" />
-                <span className="text-amber-800 font-medium">深度事業運勢分析</span>
-              </div>
-              <p className="text-amber-700 text-sm">
-                解鎖完整報告查看十年大運、最佳轉職時機、投資建議等詳細內容
-              </p>
-              <button 
-                onClick={() => handlePurchase('深度事業運勢分析', 38)}
-                className="mt-3 bg-amber-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-amber-700 transition-colors"
-              >
-                解鎖完整報告 ¥38
-              </button>
-            </div>
           </div>
         )
       
@@ -136,21 +121,6 @@ export default function AnalysisResult({ data, onReset }: AnalysisResultProps) {
               </p>
             </div>
             
-            <div className="bg-pink-50 border border-pink-200 rounded-lg p-4">
-              <div className="flex items-center mb-2">
-                <Crown className="w-4 h-4 text-pink-600 mr-2" />
-                <span className="text-pink-800 font-medium">情感合盤分析</span>
-              </div>
-              <p className="text-pink-700 text-sm">
-                上傳伴侶手相，獲得專業的情感相配度分析與相處建議
-              </p>
-              <button 
-                onClick={() => handlePurchase('情感合盤分析', 48)}
-                className="mt-3 bg-pink-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-pink-700 transition-colors"
-              >
-                情感合盤報告 ¥48
-              </button>
-            </div>
           </div>
         )
       
