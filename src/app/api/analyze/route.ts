@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { DeepSeekPalmistryService } from '@/lib/deepseek-service';
 import { EnhancedPalmAnalyzer } from '@/lib/enhanced-analyzer';
+import { PalmPositioningService } from '@/lib/palm-positioning';
 
 interface AnalysisRequest {
   imageData: string;
@@ -13,6 +14,7 @@ interface AnalysisRequest {
 // 創建全局服務實例
 let deepSeekService: DeepSeekPalmistryService | null = null;
 let fallbackAnalyzer: EnhancedPalmAnalyzer | null = null;
+let palmPositioning: PalmPositioningService | null = null;
 
 function getDeepSeekService(): DeepSeekPalmistryService | null {
   if (!deepSeekService) {
@@ -33,6 +35,13 @@ function getFallbackAnalyzer(): EnhancedPalmAnalyzer {
   return fallbackAnalyzer;
 }
 
+function getPalmPositioning(): PalmPositioningService {
+  if (!palmPositioning) {
+    palmPositioning = new PalmPositioningService();
+  }
+  return palmPositioning;
+}
+
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
   
@@ -41,6 +50,15 @@ export async function POST(request: NextRequest) {
     
     console.log('🔍 開始手相分析...');
     
+    // 1. 首先進行手掌定位分析
+    console.log('📍 分析手掌特徵定位...');
+    const positioning = getPalmPositioning();
+    const palmFeatures = await positioning.analyzePalmFeatures(imageData);
+    
+    // 2. 驗證手掌質量
+    const qualityCheck = positioning.validatePalmQuality(palmFeatures);
+    console.log(`🎯 手掌定位完成，信心度: ${(palmFeatures.confidence * 100).toFixed(1)}%`);
+    
     // 嘗試使用DeepSeek服務
     const deepSeekService = getDeepSeekService();
     
@@ -48,7 +66,7 @@ export async function POST(request: NextRequest) {
       console.log('🤖 使用DeepSeek AI進行分析');
       
       try {
-        const analysis = await deepSeekService.analyzePalm(imageData, userInfo);
+        const analysis = await deepSeekService.analyzePalmWithPositioning(imageData, userInfo, palmFeatures);
         const processingTime = Date.now() - startTime;
         
         console.log(`✅ DeepSeek分析完成，耗時: ${processingTime}ms`);
@@ -56,8 +74,12 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({
           ...analysis,
           processingTime,
+          palmPositioning: {
+            features: palmFeatures,
+            quality: qualityCheck
+          },
           _debug: {
-            method: 'deepseek_ai',
+            method: 'deepseek_ai_enhanced',
             timestamp: new Date().toISOString()
           }
         });
