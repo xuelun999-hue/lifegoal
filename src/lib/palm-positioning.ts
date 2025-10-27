@@ -1,17 +1,14 @@
 // 手掌定位和分析增強工具
 // 基於提供的 Python ROI 提取邏輯改進手相分析
 
-interface PalmFeatures {
-  palmCenter: { x: number; y: number };
-  palmRadius: number;
-  rotationAngle: number;
-  keyPoints: Array<{ x: number; y: number; type: string }>;
-  roiSquare: {
-    topLeft: { x: number; y: number };
-    bottomRight: { x: number; y: number };
-  };
-  confidence: number;
-}
+import { 
+  PalmFeatures, 
+  DetailedPalmFeatures,
+  LifeLineFeature,
+  HeartLineFeature,
+  HeadLineFeature,
+  FingerFeature 
+} from '@/types';
 
 interface PalmAnalysisConfig {
   enableRotationCorrection: boolean;
@@ -113,13 +110,16 @@ ${palmFeatures.keyPoints.map(point =>
     // 模擬檢測信心度
     const confidence = 0.75 + (seed % 25) / 100; // 0.75-1.0
 
+    const detailedFeatures = this.generateDetailedFeatures(seed, palmCenter, palmRadius);
+
     return {
       palmCenter,
       palmRadius,
       rotationAngle,
       keyPoints,
       roiSquare,
-      confidence
+      confidence,
+      detailedFeatures
     };
   }
 
@@ -236,6 +236,126 @@ ${palmFeatures.keyPoints.map(point =>
       score: Math.max(0, Math.min(100, score)),
       issues,
       suggestions
+    };
+  }
+
+  /**
+   * 生成詳細的手相特徵分析
+   */
+  private generateDetailedFeatures(seed: number, palmCenter: { x: number; y: number }, palmRadius: number): DetailedPalmFeatures {
+    // 基於seed生成一致的隨機特徵
+    const random = (offset: number = 0) => ((seed + offset) % 100) / 100;
+    
+    // 生命線特徵
+    const life_line: LifeLineFeature = {
+      length_ratio: 0.7 + random(1) * 0.3, // 0.7-1.0
+      depth: random(2) > 0.7 ? 'deep' : random(2) > 0.4 ? 'medium' : 'shallow',
+      curvature: random(3) > 0.6 ? 'wide' : random(3) > 0.3 ? 'moderate' : 'slight',
+      clarity: random(4) > 0.6 ? 'prominent' : random(4) > 0.3 ? 'clear' : 'faint',
+      color: random(5) > 0.7 ? 'red' : random(5) > 0.4 ? 'pinkish' : 'pale',
+      interruptions: Math.floor(random(6) * 3), // 0-2
+      branches: Math.floor(random(7) * 5), // 0-4
+      start_separation_head_line: random(8) * 0.3, // 0-0.3
+      end_position: random(9) > 0.6 ? 'wrist' : random(9) > 0.3 ? 'middle_palm' : 'upper_palm'
+    };
+
+    // 感情線特徵
+    const heart_line: HeartLineFeature = {
+      length_ratio: 0.6 + random(10) * 0.4, // 0.6-1.0
+      depth: random(11) > 0.6 ? 'deep' : random(11) > 0.3 ? 'medium' : 'shallow',
+      curvature: random(12) > 0.5 ? 'moderate' : random(12) > 0.2 ? 'slight' : 'straight',
+      clarity: random(13) > 0.5 ? 'prominent' : random(13) > 0.2 ? 'clear' : 'faint',
+      color: random(14) > 0.6 ? 'red' : random(14) > 0.3 ? 'pinkish' : 'pale',
+      interruptions: Math.floor(random(15) * 2), // 0-1
+      branches: Math.floor(random(16) * 4), // 0-3
+      end_point: random(17) > 0.7 ? 'above_middle_finger' : 
+                random(17) > 0.5 ? 'under_middle_finger' : 
+                random(17) > 0.3 ? 'between_index_middle' : 'under_index_finger',
+      start_position: random(18) > 0.5 ? 'mount_mercury' : random(18) > 0.2 ? 'below_pinky' : 'palm_edge'
+    };
+
+    // 智慧線特徵
+    const head_line: HeadLineFeature = {
+      length_ratio: 0.5 + random(19) * 0.5, // 0.5-1.0
+      depth: random(20) > 0.6 ? 'deep' : random(20) > 0.3 ? 'medium' : 'shallow',
+      curvature: random(21) > 0.6 ? 'moderate' : random(21) > 0.3 ? 'slight' : 'straight',
+      clarity: random(22) > 0.6 ? 'prominent' : random(22) > 0.3 ? 'clear' : 'faint',
+      color: random(23) > 0.6 ? 'red' : random(23) > 0.3 ? 'pinkish' : 'pale',
+      interruptions: Math.floor(random(24) * 2), // 0-1
+      branches: Math.floor(random(25) * 3), // 0-2
+      slope: random(26) > 0.6 ? 'downward' : random(26) > 0.3 ? 'straight' : 'upward',
+      end_position: random(27) > 0.5 ? 'mount_moon' : random(27) > 0.2 ? 'palm_edge' : 'middle_palm'
+    };
+
+    // 手指特徵生成函數
+    const generateFingerFeature = (offset: number): FingerFeature => ({
+      length_ratio: 0.7 + random(offset) * 0.3, // 0.7-1.0
+      thickness: random(offset + 1) > 0.6 ? 'thick' : random(offset + 1) > 0.3 ? 'medium' : 'thin',
+      flexibility: random(offset + 2) > 0.6 ? 'flexible' : random(offset + 2) > 0.3 ? 'normal' : 'stiff',
+      nail_shape: random(offset + 3) > 0.7 ? 'pointed' : 
+                  random(offset + 3) > 0.5 ? 'oval' : 
+                  random(offset + 3) > 0.3 ? 'round' : 'square',
+      nail_color: random(offset + 4) > 0.6 ? 'red' : random(offset + 4) > 0.3 ? 'pink' : 'pale'
+    });
+
+    return {
+      palm_shape: random(30) > 0.8 ? 'psychic' : 
+                  random(30) > 0.6 ? 'conic' : 
+                  random(30) > 0.4 ? 'spatulate' : 
+                  random(30) > 0.2 ? 'rectangular' : 'square',
+      palm_size: random(31) > 0.6 ? 'large' : random(31) > 0.3 ? 'medium' : 'small',
+      palm_texture: random(32) > 0.7 ? 'firm' : 
+                    random(32) > 0.5 ? 'soft' : 
+                    random(32) > 0.3 ? 'rough' : 'smooth',
+      palm_color: random(33) > 0.7 ? 'red' : 
+                  random(33) > 0.5 ? 'pink' : 
+                  random(33) > 0.3 ? 'yellow' : 'pale',
+      
+      life_line,
+      heart_line,
+      head_line,
+      
+      // 次要線條（可選）
+      fate_line: random(40) > 0.7 ? {
+        length_ratio: 0.4 + random(41) * 0.6,
+        depth: random(42) > 0.5 ? 'medium' : 'shallow',
+        curvature: 'straight',
+        clarity: random(43) > 0.5 ? 'clear' : 'faint',
+        color: 'pinkish',
+        interruptions: Math.floor(random(44) * 2),
+        branches: Math.floor(random(45) * 2)
+      } : undefined,
+      
+      // 手指特徵
+      thumb: generateFingerFeature(50),
+      index_finger: generateFingerFeature(55),
+      middle_finger: generateFingerFeature(60),
+      ring_finger: generateFingerFeature(65),
+      pinky_finger: generateFingerFeature(70),
+      
+      // 手掌丘陵
+      mounts: {
+        venus: { prominence: random(80) * 10, texture: random(81) > 0.5 ? 'smooth' : 'rough' },
+        jupiter: { prominence: random(82) * 10, texture: random(83) > 0.5 ? 'smooth' : 'rough' },
+        saturn: { prominence: random(84) * 10, texture: random(85) > 0.5 ? 'smooth' : 'rough' },
+        apollo: { prominence: random(86) * 10, texture: random(87) > 0.5 ? 'smooth' : 'rough' },
+        mercury: { prominence: random(88) * 10, texture: random(89) > 0.5 ? 'smooth' : 'rough' },
+        moon: { prominence: random(90) * 10, texture: random(91) > 0.5 ? 'smooth' : 'rough' },
+        mars_positive: { prominence: random(92) * 10, texture: random(93) > 0.5 ? 'smooth' : 'rough' },
+        mars_negative: { prominence: random(94) * 10, texture: random(95) > 0.5 ? 'smooth' : 'rough' }
+      },
+      
+      // 特殊記號
+      special_marks: random(96) > 0.8 ? [
+        {
+          type: random(97) > 0.8 ? 'star' : 
+                random(97) > 0.6 ? 'triangle' : 
+                random(97) > 0.4 ? 'square' : 
+                random(97) > 0.2 ? 'cross' : 'dot',
+          location: random(98) > 0.5 ? 'mount_jupiter' : 'life_line',
+          meaning: '特殊運勢標記'
+        }
+      ] : []
     };
   }
 }

@@ -1,19 +1,9 @@
 'use client';
 
 import React, { useRef, useEffect, useState, useCallback } from 'react';
-import { Eye, EyeOff, RotateCcw } from 'lucide-react';
-
-interface PalmFeatures {
-  palmCenter: { x: number; y: number };
-  palmRadius: number;
-  rotationAngle: number;
-  keyPoints: Array<{ x: number; y: number; type: string }>;
-  roiSquare: {
-    topLeft: { x: number; y: number };
-    bottomRight: { x: number; y: number };
-  };
-  confidence: number;
-}
+import { Eye, EyeOff, RotateCcw, FileText } from 'lucide-react';
+import { DetailedPalmFeatures } from './DetailedPalmFeatures';
+import type { PalmFeatures } from '@/types';
 
 interface PalmVisualizationProps {
   imageUrl: string;
@@ -30,6 +20,7 @@ export function PalmVisualization({
   const [imageLoaded, setImageLoaded] = useState(false);
   const [showFeatures, setShowFeatures] = useState(true);
   const [showDetails, setShowDetails] = useState(false);
+  const [showDetailedFeatures, setShowDetailedFeatures] = useState(false);
 
   const drawPalmFeatures = useCallback((
     ctx: CanvasRenderingContext2D, 
@@ -353,6 +344,16 @@ export function PalmVisualization({
             >
               {showDetails ? '隱藏詳情' : '顯示詳情'}
             </button>
+            
+            {palmFeatures.detailedFeatures && (
+              <button
+                onClick={() => setShowDetailedFeatures(!showDetailedFeatures)}
+                className="flex items-center space-x-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+              >
+                <FileText className="w-4 h-4" />
+                <span>{showDetailedFeatures ? '隱藏詳細分析' : '詳細特徵分析'}</span>
+              </button>
+            )}
           </div>
           
           {/* 圖例 */}
@@ -408,6 +409,17 @@ export function PalmVisualization({
                   </ul>
                 </div>
               </div>
+            </div>
+          )}
+          
+          {/* 詳細特徵分析 */}
+          {showDetailedFeatures && palmFeatures.detailedFeatures && (
+            <div className="mt-6 p-6 bg-white rounded-lg border border-purple-200">
+              <h4 className="text-lg font-semibold mb-4 flex items-center text-purple-800">
+                <FileText className="w-5 h-5 mr-2" />
+                詳細手相特徵分析報告
+              </h4>
+              <DetailedPalmFeatures features={palmFeatures.detailedFeatures} />
             </div>
           )}
         </div>
