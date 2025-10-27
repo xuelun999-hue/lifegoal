@@ -1,17 +1,19 @@
 'use client'
 
 import { useState } from 'react'
-import { Star, TrendingUp, Heart, Shield, RotateCcw, Lock, Crown } from 'lucide-react'
+import { Star, TrendingUp, Heart, Shield, RotateCcw, Lock, Crown, Eye } from 'lucide-react'
 import { AnalysisData } from '@/types'
 import PaymentModal from './PaymentModal'
 import PremiumAnalysisResult from './PremiumAnalysisResult'
+import { PalmVisualization } from './PalmVisualization'
 
 interface AnalysisResultProps {
   data: AnalysisData
   onReset: () => void
+  uploadedImage?: string | null
 }
 
-export default function AnalysisResult({ data, onReset }: AnalysisResultProps) {
+export default function AnalysisResult({ data, onReset, uploadedImage }: AnalysisResultProps) {
   const [activeTab, setActiveTab] = useState('overview')
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [isPremiumUnlocked, setIsPremiumUnlocked] = useState(false)
@@ -19,6 +21,7 @@ export default function AnalysisResult({ data, onReset }: AnalysisResultProps) {
 
   const tabs = [
     { id: 'overview', label: '總覽', icon: <Star className="w-4 h-4" /> },
+    { id: 'visualization', label: '手掌特徵', icon: <Eye className="w-4 h-4" /> },
     { id: 'career', label: '事業', icon: <TrendingUp className="w-4 h-4" /> },
     { id: 'relationship', label: '感情', icon: <Heart className="w-4 h-4" /> },
     { id: 'health', label: '健康', icon: <Shield className="w-4 h-4" /> },
@@ -60,6 +63,70 @@ export default function AnalysisResult({ data, onReset }: AnalysisResultProps) {
 
   const renderTabContent = () => {
     switch (activeTab) {
+      case 'visualization':
+        if (!uploadedImage || !data.palmPositioning) {
+          return (
+            <div className="text-center py-8">
+              <Eye className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-500">手掌特徵分析數據不可用</p>
+            </div>
+          );
+        }
+        return (
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 font-chinese">
+              手掌特徵視覺化分析
+            </h3>
+            <PalmVisualization 
+              imageUrl={uploadedImage}
+              palmFeatures={data.palmPositioning.features}
+              onRegenerateFeatures={() => {
+                // 可以在這裡添加重新分析功能
+                console.log('重新分析手掌特徵');
+              }}
+            />
+            
+            {/* 顯示檢測質量報告 */}
+            {data.palmPositioning.quality && (
+              <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+                <h4 className="font-semibold mb-2">檢測質量報告</h4>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span>檢測狀態:</span>
+                    <span className={data.palmPositioning.quality.isValid ? 'text-green-600' : 'text-red-600'}>
+                      {data.palmPositioning.quality.isValid ? '✓ 合格' : '✗ 需要改進'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>質量評分:</span>
+                    <span>{data.palmPositioning.quality.score.toFixed(1)}分</span>
+                  </div>
+                  {data.palmPositioning.quality.issues.length > 0 && (
+                    <div>
+                      <span className="font-medium">問題:</span>
+                      <ul className="list-disc list-inside ml-4 text-gray-600">
+                        {data.palmPositioning.quality.issues.map((issue, index) => (
+                          <li key={index}>{issue}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {data.palmPositioning.quality.suggestions.length > 0 && (
+                    <div>
+                      <span className="font-medium">建議:</span>
+                      <ul className="list-disc list-inside ml-4 text-gray-600">
+                        {data.palmPositioning.quality.suggestions.map((suggestion, index) => (
+                          <li key={index}>{suggestion}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        );
+        
       case 'overview':
         return (
           <div className="space-y-6">

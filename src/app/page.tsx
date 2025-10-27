@@ -95,6 +95,7 @@ export default function Home() {
         <AnalysisResult 
           data={analysisData}
           onReset={handleReset}
+          uploadedImage={uploadedImage}
         />
       )
     }
